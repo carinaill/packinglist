@@ -5,15 +5,20 @@ import java.util.Arrays;
 import java.util.List;
 
 import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
 @RequestScoped
 @Named
 public class Overview {
+@Inject 
+private Service service;
 
 	private List<Card> destinations;
 
 	public void init() {
+		System.out.println(service.testCount());
+		
 		this.destinations = new ArrayList<>();
 		
 		Card spain = new Card("Spanien");
