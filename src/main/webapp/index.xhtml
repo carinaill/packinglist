@@ -13,26 +13,30 @@
 	<link rel="stylesheet"
 		href="https://fonts.googleapis.com/css?family=Sofia" />
 </h:head>
+<f:metadata>
+	<f:viewAction action="#{overview.init}" />
+</f:metadata>
 <h:body>
-	<f:metadata>
-		<f:viewAction action="#{overview.init}" />
-	</f:metadata>
-	<div class="w3-light-grey w3-padding-32 w3-center">
-		<h1 class="w3-jumbo w3-sofia">Deine Packliste</h1>
-	</div>
-	<div class="w3-row-padding">
-		<ui:repeat value="#{overview.destinations}" var="destination">
-			<div class="w3-cell w3-third">
-				<div class="w3-card w3-padding-large w3-leftbar w3-round w3-border">
-					<h2>#{destination.title}</h2>
+	<h:form>
+		<div class="w3-light-grey w3-padding-32 w3-center">
+			<h1 class="w3-jumbo w3-sofia">Deine Packliste</h1>
+		</div>
+		<div class="w3-row-padding">
+			<ui:repeat value="#{overview.destinations}" var="destination">
+				<div class="w3-cell w3-third">
+					<div class="w3-card w3-padding-large w3-leftbar w3-round w3-border">
+						<h2>#{destination.title}</h2>
+					</div>
+					<ul class="w3-ul w3-card w3-margin w3-round w3-border">
+						<ui:repeat value="#{destination.items}" var="item">
+							<h:commandLink action="#{overview.onClick(item)}">
+								<li>#{item}</li>
+							</h:commandLink>
+						</ui:repeat>
+					</ul>
 				</div>
-				<ul class="w3-ul w3-card w3-margin w3-round w3-border">
-					<ui:repeat value="#{destination.items}" var="item">
-						<li>#{item}</li>
-					</ui:repeat>
-				</ul>
-			</div>
-		</ui:repeat>
-	</div>
+			</ui:repeat>
+		</div>
+	</h:form>
 </h:body>
 </html>
