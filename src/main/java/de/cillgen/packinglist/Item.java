@@ -24,6 +24,9 @@ public class Item {
 	@Column(name = "DESTINATION_ID", nullable = false)
 	private long destinationId;
 
+	@Column(nullable = false)
+	private long done;
+
 	public Long getId() {
 		return id;
 	}
@@ -46,6 +49,14 @@ public class Item {
 
 	public void setDestinationId(long destinationId) {
 		this.destinationId = destinationId;
+	}
+
+	public long getDone() {
+		return done;
+	}
+
+	public void setDone(long done) {
+		this.done = done;
 	}
 
 	@Override
