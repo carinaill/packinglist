@@ -8,6 +8,9 @@
 	<packaging>war</packaging>
 	<name>Packing-List</name>
 	<description>Simple Tool to pack</description>
+	<properties>
+		<java.encoding>UTF-8</java.encoding>
+	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>jakarta.servlet</groupId>

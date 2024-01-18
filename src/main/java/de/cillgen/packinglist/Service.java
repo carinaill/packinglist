@@ -9,7 +9,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
-import jakarta.persistence.Query;
 
 @ApplicationScoped
 public class Service {
@@ -17,45 +16,129 @@ public class Service {
 	@Inject
 	private EntityManager em;
 
-	public int testCount() {
-		Query query = em.createNativeQuery("SELECT COUNT(*) FROM DESTINATION");
-		return ((Number) query.getSingleResult()).intValue();
-	}
-
-	public void testInit() {
-		Destination destination = new Destination();
-		destination.setName("Spanien");
-
-		EntityTransaction entityTransaction = em.getTransaction();
-		try {
-			entityTransaction.begin();
-			em.persist(destination);
-			entityTransaction.commit();
-		} catch (Exception e) {
-			entityTransaction.rollback();
-		}
-	}
-
-	public List<Card> testLoad() {
-		List<Destination> destinations = em.createQuery("SELECT d FROM Destination d", Destination.class)
+	public List<DestinationModel> load() {
+		List<Destination> destinations = em
+				.createQuery("SELECT d FROM Destination d ORDER BY d.id DESC", Destination.class)
 				.getResultList();
-		Map<Long, List<String>> itemNamesByDestinationId = em.createQuery("SELECT i FROM Item i", Item.class)
+		Map<Long, List<Item>> itemNamesByDestinationId = em
+				.createQuery("SELECT i FROM Item i ORDER BY i.id ASC", Item.class)
 				.getResultStream()
-				.collect(Collectors.groupingBy(Item::getDestinationId,
-						Collectors.mapping(Item::getName, Collectors.toList())));
+				.collect(Collectors.groupingBy(Item::getDestinationId, Collectors.toList()));
 
 		return destinations
 				.stream()
-				.map(dest -> toCard(dest, itemNamesByDestinationId))
-				.collect(Collectors.toList());
+				.map(dest -> toDestinationModel(dest, itemNamesByDestinationId))
+				.toList();
 	}
 
-	private Card toCard(Destination dest, Map<Long, List<String>> itemNamesByDestinationId) {
-		Card card = new Card(dest.getName());
-		List<String> itemNames = itemNamesByDestinationId.getOrDefault(dest.getId(),
-				Collections.emptyList());
-		card.setItems(itemNames);
-		return card;
+	private DestinationModel toDestinationModel(Destination dest, Map<Long, List<Item>> itemNamesByDestinationId) {
+		DestinationModel destinationModel = new DestinationModel();
+		List<ItemModel> itemModelNames = itemNamesByDestinationId
+				.getOrDefault(dest.getId(), Collections.emptyList())
+				.stream()
+				.map(this::toItemModel)
+				.toList();
+		Map<Category, List<ItemModel>> itemModelsByCategory = itemModelNames.stream()
+				.collect(Collectors.groupingBy(ItemModel::getCategory));
+
+		destinationModel.setId(dest.getId());
+		destinationModel.setName(dest.getName());
+		destinationModel.getItemModelsByCategory().putAll(itemModelsByCategory);
+		return destinationModel;
 	}
 
+	private ItemModel toItemModel(Item item) {
+		ItemModel itemModel = new ItemModel();
+		itemModel.setId(item.getId());
+		itemModel.setName(item.getName());
+		itemModel.setQuantity(item.getQuantity());
+		itemModel.setCategory(item.getCategory());
+		itemModel.setDone(item.getDone() == 1);
+		return itemModel;
+	}
+
+	public Item toItem(ItemModel itemModel, Long destId) {
+		Item item = new Item();
+		item.setDestinationId(destId);
+		item.setName(itemModel.getName());
+		item.setQuantity(itemModel.getQuantity());
+		item.setCategory(itemModel.getCategory());
+		int done = itemModel.getDone() ? 0 : 1;
+		item.setDone(done);
+		return item;
+	}
+
+	public Destination toDestination(String destinationName) {
+		Destination destination = new Destination();
+		destination.setName(destinationName);
+		return destination;
+	}
+
+	public void updateItem(ItemModel itemModel) {
+		Item item = em.find(Item.class, itemModel.getId());
+		long status = itemModel.getDone() ? 0 : 1;
+		item.setDone(status);
+		EntityTransaction tx = em.getTransaction();
+		try {
+			tx.begin();
+			em.merge(item);
+			tx.commit();
+		} catch (Exception e) {
+			tx.rollback();
+		}
+	}
+
+	public void removeItem(ItemModel itemModel) {
+		Item item = em.find(Item.class, itemModel.getId());
+		EntityTransaction tx = em.getTransaction();
+		try {
+			tx.begin();
+			em.remove(item);
+			tx.commit();
+		} catch (Exception e) {
+			tx.rollback();
+			throw e;
+		}
+	}
+
+	public void addItem(Item item) {
+		EntityTransaction tx = em.getTransaction();
+		try {
+			tx.begin();
+			em.persist(item);
+			tx.commit();
+		} catch (Exception e) {
+			tx.rollback();
+			throw e;
+		}
+	}
+
+	public void removeDestination(DestinationModel destinationModel) {
+		EntityTransaction tx = em.getTransaction();
+		try {
+			tx.begin();
+			destinationModel.getItemModelsByCategory().forEach((key, itemModelList) -> itemModelList.forEach(i -> {
+				Item item = em.find(Item.class, i.getId());
+				em.remove(item);
+			}));
+			Destination destination = em.find(Destination.class, destinationModel.getId());
+			em.remove(destination);
+			tx.commit();
+		} catch (Exception e) {
+			tx.rollback();
+			throw e;
+		}
+	}
+
+	public void addDestination(Destination destination) {
+		EntityTransaction tx = em.getTransaction();
+		try {
+			tx.begin();
+			em.persist(destination);
+			tx.commit();
+		} catch (Exception e) {
+			tx.rollback();
+			throw e;
+		}
+	}
 }

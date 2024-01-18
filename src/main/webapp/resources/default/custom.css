@@ -1,6 +1,35 @@
-.w3-sofia{
+.w3-sofia {
 	font-family: Sofia, cursive;
 }
-html, body, h1, h2, h3, h4, h5, h6 {
-	font-family: "Lucida Console", Monaco, monospace;;
+
+html,
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: "Lucida Console", Monaco, monospace;
+}
+
+a {
+	text-decoration: none;
+}
+
+.item-done {
+	text-decoration-line: line-through;
+	text-decoration-thickness: 0.15rem;
+}
+
+.w3-modal {
+	display: block;
+}
+
+.w3-ul li {
+	height: 51.35px;
+}
+
+.right {
+	float: right;
 }

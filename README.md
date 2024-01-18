@@ -1,7 +1,7 @@
-# packinglist
+# Packinglist
 > A very simple packing list
 
-This is a project with Maven to learn.
+This is a Maven project using JSF to learn.
 
 ## Prerequisites
 

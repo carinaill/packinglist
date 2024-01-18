@@ -27,6 +27,12 @@ public class Item {
 	@Column(nullable = false)
 	private long done;
 
+	@Column(nullable = false)
+	private long quantity;
+
+	@Column(nullable = false)
+	private Category category;
+
 	public Long getId() {
 		return id;
 	}
@@ -57,6 +63,22 @@ public class Item {
 
 	public void setDone(long done) {
 		this.done = done;
+	}
+
+	public long getQuantity() {
+		return quantity;
+	}
+
+	public void setQuantity(long quantity) {
+		this.quantity = quantity;
+	}
+
+	public Category getCategory() {
+		return category;
+	}
+
+	public void setCategory(Category category) {
+		this.category = category;
 	}
 
 	@Override
