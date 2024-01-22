@@ -33,3 +33,31 @@ a {
 .right {
 	float: right;
 }
+
+body .green-button {
+	color: green;
+	border: 1px solid green;
+}
+
+.bar {
+	width: 30%;
+	background-color: white;
+}
+
+body .delete-destination{
+	margin-top: 7px;
+}
+
+body .grey-button, 
+body .grey-button:hover{
+	background: grey;
+	border: 1px solid grey;
+}
+
+body .bold{
+	font-weight: 700;
+}
+
+body .item{
+	position:relative; top:7px
+}

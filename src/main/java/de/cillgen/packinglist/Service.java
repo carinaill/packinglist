@@ -33,14 +33,9 @@ public class Service {
 
 	private DestinationModel toDestinationModel(Destination dest, Map<Long, List<Item>> itemNamesByDestinationId) {
 		DestinationModel destinationModel = new DestinationModel();
-		List<ItemModel> itemModelNames = itemNamesByDestinationId
-				.getOrDefault(dest.getId(), Collections.emptyList())
-				.stream()
-				.map(this::toItemModel)
-				.toList();
-		Map<Category, List<ItemModel>> itemModelsByCategory = itemModelNames.stream()
+		Map<Category, List<ItemModel>> itemModelsByCategory = itemNamesByDestinationId
+				.getOrDefault(dest.getId(), Collections.emptyList()).stream().map(this::toItemModel)
 				.collect(Collectors.groupingBy(ItemModel::getCategory));
-
 		destinationModel.setId(dest.getId());
 		destinationModel.setName(dest.getName());
 		destinationModel.getItemModelsByCategory().putAll(itemModelsByCategory);
@@ -74,7 +69,7 @@ public class Service {
 		return destination;
 	}
 
-	public void updateItem(ItemModel itemModel) {
+	public void updateItem(ItemModel itemModel) throws ServiceException {
 		Item item = em.find(Item.class, itemModel.getId());
 		long status = itemModel.getDone() ? 0 : 1;
 		item.setDone(status);
@@ -84,11 +79,14 @@ public class Service {
 			em.merge(item);
 			tx.commit();
 		} catch (Exception e) {
-			tx.rollback();
+			if (tx.isActive()) {
+				tx.rollback();
+			}
+			throw new ServiceException(e);
 		}
 	}
 
-	public void removeItem(ItemModel itemModel) {
+	public void removeItem(ItemModel itemModel) throws ServiceException {
 		Item item = em.find(Item.class, itemModel.getId());
 		EntityTransaction tx = em.getTransaction();
 		try {
@@ -96,24 +94,28 @@ public class Service {
 			em.remove(item);
 			tx.commit();
 		} catch (Exception e) {
-			tx.rollback();
-			throw e;
+			if (tx.isActive()) {
+				tx.rollback();
+			}
+			throw new ServiceException(e);
 		}
 	}
 
-	public void addItem(Item item) {
+	public void addItem(Item item) throws ServiceException {
 		EntityTransaction tx = em.getTransaction();
 		try {
 			tx.begin();
 			em.persist(item);
 			tx.commit();
 		} catch (Exception e) {
-			tx.rollback();
-			throw e;
+			if (tx.isActive()) {
+				tx.rollback();
+			}
+			throw new ServiceException(e);
 		}
 	}
 
-	public void removeDestination(DestinationModel destinationModel) {
+	public void removeDestination(DestinationModel destinationModel) throws ServiceException {
 		EntityTransaction tx = em.getTransaction();
 		try {
 			tx.begin();
@@ -125,20 +127,24 @@ public class Service {
 			em.remove(destination);
 			tx.commit();
 		} catch (Exception e) {
-			tx.rollback();
-			throw e;
+			if (tx.isActive()) {
+				tx.rollback();
+			}
+			throw new ServiceException(e);
 		}
 	}
 
-	public void addDestination(Destination destination) {
+	public void addDestination(Destination destination) throws ServiceException {
 		EntityTransaction tx = em.getTransaction();
 		try {
 			tx.begin();
 			em.persist(destination);
 			tx.commit();
 		} catch (Exception e) {
-			tx.rollback();
-			throw e;
+			if (tx.isActive()) {
+				tx.rollback();
+			}
+			throw new ServiceException(e);
 		}
 	}
 }

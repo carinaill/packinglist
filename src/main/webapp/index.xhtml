@@ -25,50 +25,41 @@
 						<div class="w3-section">
 							<label><b>Was möchtest du noch mitnehmen?</b></label>
 							<h:inputText value="#{overview.newItemName}"
-								class="w3-input w3-border w3-margin-bottom w3-round w3-animate-input"
-								style="width:30%">
+								styleClass="w3-input w3-border w3-margin-bottom w3-round w3-animate-input bar">
 							</h:inputText>
 						</div>
-
 						<div class="w3-section">
 							<label><b>Wie viele möchtest du mitnehmen?</b></label>
 							<h:inputText value="#{overview.quantity}"
-								class="w3-input w3-border w3-margin-bottom w3-round w3-animate-input"
-								style="width:30%" type="number" />
-
+								styleClass="w3-input w3-border w3-margin-bottom w3-round bar"
+								type="number" />
 						</div>
 						<div class="w3-section">
 							<label><b>In welche Kategorie gehört es?</b></label>
 							<h:selectOneMenu value="#{overview.category}"
-								class="w3-input w3-border w3-margin-bottom w3-round w3-animate-input"
-								style="width:30%;background:white">
+								styleClass="w3-input w3-border w3-margin-bottom w3-round bar">
 								<f:selectItems value="#{overview.categories}" />
 							</h:selectOneMenu>
-
-							<ui:fragment rendered="#{overview.showErrorMessage}">
-								<p style="color: red">Achtung, du hast noch nicht alle
-									Felder ausgefüllt</p>
+							<ui:fragment rendered="#{overview.showMessage}">
+								<div class="ui-messages ui-widget">
+									<div class="ui-messages-error ui-corner-all">Achtung, du
+										hast noch nicht alle Felder ausgefüllt</div>
+								</div>
 							</ui:fragment>
-
-							<p:commandButton ajax="false"
-								class="w3-button w3-display-topright"
-								action="#{overview.addItem}" icon="pi pi-check"
-								style="color: green ; border: 1px solid green;"
-								styleClass="rounded-button ui-button-secondary ui-button-flat"></p:commandButton>
-							<spacer />
-							<p:commandButton ajax="false"
-								class="w3-button w3-display-topright"
-								action="#{overview.hideItemModal}" icon="pi pi-times"
-								style="color: red; border: 1px solid red;"
-								styleClass="rounded-button ui-button-secondary ui-button-flat"></p:commandButton>
 						</div>
-					</div>
+						<div class="w3-section">
+							<p:commandButton ajax="false" action="#{overview.addItem}"
+								icon="pi pi-check"
+								styleClass="rounded-button ui-button-success ui-button-outlined w3-margin-right" />
+							<p:commandButton ajax="false" action="#{overview.hideItemModal}"
+								icon="pi pi-times"
+								styleClass="rounded-button ui-button-danger ui-button-outlined" />
+						</div>
 
+					</div>
 				</div>
 			</div>
-
 		</ui:fragment>
-
 		<ui:fragment rendered="#{overview.showDestinationModal}">
 			<div class="w3-modal">
 				<div class="w3-modal-content w3-round w3-border">
@@ -76,33 +67,30 @@
 						<div class="w3-section">
 							<label><b>Wohin reist du als nächstes?</b></label>
 							<h:inputText value="#{overview.newDestinationName}"
-								class="w3-input w3-border w3-margin-bottom w3-round w3-animate-input"
-								style="width:30%">
+								styleClass="w3-input w3-border w3-margin-bottom w3-round w3-animate-input bar">
 							</h:inputText>
-
-							<ui:fragment rendered="#{overview.showErrorMessage}">
-								<p style="color: red">Achtung, du hast noch nicht alle
-									Felder ausgefüllt</p>
+							<ui:fragment rendered="#{overview.showMessage}">
+								<div class="ui-messages ui-widget">
+									<div class="ui-messages-error ui-corner-all">Achtung, du
+										hast noch nicht alle Felder ausgefüllt</div>
+								</div>
 							</ui:fragment>
-
+							<p:commandButton ajax="false" action="#{overview.addDestination}"
+								icon="pi pi-check"
+								styleClass="rounded-button ui-button-success ui-button-outlined w3-margin-right" />
 							<p:commandButton ajax="false"
-								class="w3-button w3-display-topright"
-								action="#{overview.addDestination}" icon="pi pi-check"
-								style="color: green ; border: 1px solid green;"
-								styleClass="rounded-button ui-button-secondary ui-button-flat"></p:commandButton>
-							<p:commandButton ajax="false"
-								class="w3-button w3-display-topright"
 								action="#{overview.hideDestinationModal}" icon="pi pi-times"
-								style="color: red; border: 1px solid red;"
-								styleClass="rounded-button ui-button-secondary ui-button-flat"></p:commandButton>
+								styleClass="rounded-button ui-button-danger ui-button-outlined"></p:commandButton>
 						</div>
 					</div>
 				</div>
 			</div>
 		</ui:fragment>
-
 		<div class="w3-light-grey w3-padding-32 w3-center">
 			<h1 class="w3-jumbo w3-sofia">Deine Packliste</h1>
+		</div>
+		<div class="w3-row-padding">
+			<p:messages />
 		</div>
 		<div class="w3-row-padding">
 			<ui:repeat value="#{overview.destinationModels}"
@@ -113,20 +101,20 @@
 							<p:commandButton ajax="false"
 								action="#{overview.removeDestination(destinationModel)}"
 								icon="pi pi-times"
-								style="background: grey; border: 1px solid grey;"
-								styleClass="right rounded-button" />
+								styleClass="right delete-destination rounded-button grey-button" />
 							#{destinationModel.name}
 						</h2>
 					</div>
-
 					<ul class="w3-ul w3-card w3-margin w3-round w3-border">
-						<ui:repeat value="#{destinationModel.itemModelsByCategory}"
-							var="itemModels">
-							<li><p style="font-weight: 700;">#{overview.translateCategory(itemModels.key)}</p></li>
-
-							<ui:repeat value="#{itemModels.value}" var="item">
-								<li><h:commandLink style="position:relative; top:7px"
-										styleClass="#{overview.getStyleClass(item)}"
+						<ui:repeat
+							value="#{overview.getNotEmptyCategories(destinationModel)}"
+							var="category">
+							<li><p class="bold">#{category.getLabel()}</p></li>
+							<ui:repeat
+								value="#{overview.getItemsForCategory(destinationModel, category)}"
+								var="item">
+								<li><h:commandLink
+										styleClass="#{overview.getStyleClass(item)} item"
 										action="#{overview.updateItem(item)}">
 									#{item.quantity}x #{item.name} 
 								 </h:commandLink> <p:commandButton ajax="false"
@@ -139,7 +127,6 @@
 								action="#{overview.showItemModal(destinationModel)}"
 								icon="pi pi-plus"
 								styleClass="right rounded-button ui-button-secondary ui-button-flat" />
-
 						</li>
 					</ul>
 				</div>
@@ -149,8 +136,7 @@
 					<h2>
 						<p:commandButton ajax="false"
 							action="#{overview.showDestinationModal}" icon="pi pi-plus"
-							style="background: grey ;border: 1px solid grey;"
-							styleClass="rounded-button" />
+							styleClass="rounded-button grey-button" />
 					</h2>
 				</div>
 			</div>

@@ -3,9 +3,13 @@ package de.cillgen.packinglist;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import jakarta.faces.application.FacesMessage;
+import jakarta.faces.context.FacesContext;
 import jakarta.faces.model.SelectItem;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -26,7 +30,7 @@ public class Overview implements Serializable {
 	private Integer quantity;
 	private Category category;
 	private List<SelectItem> categories = new ArrayList<>();
-	private Boolean showErrorMessage;
+	private Boolean showMessage;
 
 	public void init() {
 		this.destinationModels.clear();
@@ -40,28 +44,39 @@ public class Overview implements Serializable {
 
 	public void updateItem(ItemModel itemModel) {
 		itemModel.setDone(itemModel.getDone());
-		service.updateItem(itemModel);
+		try {
+			service.updateItem(itemModel);
+		} catch (ServiceException e) {
+			showErrorMessage("Das Objekt konnte nicht als gepackt markiert werden.");
+		}
 		this.init();
 	}
 
 	public void removeItem(ItemModel itemModel) {
-		service.removeItem(itemModel);
+		try {
+			service.removeItem(itemModel);
+		} catch (ServiceException e) {
+			showErrorMessage("Das Objekt konnte nicht gelöscht werden.");
+		}
 		this.init();
 	}
 
 	public void addItem() {
-		if (this.newItemName != null && this.quantity != null && this.category != null) {
+		if (!this.newItemName.equals("") && this.quantity != null && this.category != null) {
 			ItemModel newItem = new ItemModel();
 			newItem.setName(this.newItemName);
 			newItem.setDone(true);
 			newItem.setQuantity(this.quantity);
 			newItem.setCategory(this.category);
-			service.addItem(service.toItem(newItem, this.destId));
-
+			try {
+				service.addItem(service.toItem(newItem, this.destId));
+			} catch (ServiceException e) {
+				showErrorMessage("Das Objekt konnte nicht hinzugefügt werden.");
+			}
 			this.hideItemModal();
 			this.init();
 		} else {
-			this.showErrorMessage = true;
+			this.showMessage = true;
 		}
 	}
 
@@ -72,25 +87,39 @@ public class Overview implements Serializable {
 
 	public void hideItemModal() {
 		this.showItemModal = false;
-		this.newItemName = null;
+		this.newItemName = "";
 		this.quantity = null;
 		this.category = null;
-		this.showErrorMessage = false;
+		this.showMessage = false;
 	}
 
 	public void removeDestination(DestinationModel destinationModel) {
-		service.removeDestination(destinationModel);
+		try {
+			service.removeDestination(destinationModel);
+		} catch (ServiceException e) {
+			showErrorMessage("Das Reiseziel konnte nicht entfernt werden.");
+		}
 		this.init();
 	}
 
 	public void addDestination() {
-		if (this.newDestinationName != null) {
-			service.addDestination(service.toDestination(this.newDestinationName));
+		if (!this.newDestinationName.equals("")) {
+			try {
+				service.addDestination(service.toDestination(this.newDestinationName));
+			} catch (ServiceException e) {
+				showErrorMessage("Das Reiseziel konnte nicht hinzugefügt werden.");
+			}
 			this.hideDestinationModal();
 			this.init();
 		} else {
-			this.showErrorMessage = true;
+			this.showMessage = true;
 		}
+	}
+
+	private void showErrorMessage(String errorMessage) {
+		FacesMessage fm = new FacesMessage(errorMessage);
+		fm.setSeverity(FacesMessage.SEVERITY_ERROR);
+		FacesContext.getCurrentInstance().addMessage(null, fm);
 	}
 
 	public void showDestinationModal() {
@@ -99,8 +128,8 @@ public class Overview implements Serializable {
 
 	public void hideDestinationModal() {
 		this.showDestinationModal = false;
-		this.newDestinationName = null;
-		this.showErrorMessage = false;
+		this.newDestinationName = "";
+		this.showMessage = false;
 	}
 
 	private void initCategories() {
@@ -108,6 +137,17 @@ public class Overview implements Serializable {
 				.map(c -> new SelectItem(c, c.getTranslation()))
 				.collect(Collectors.toList());
 		this.categories.add(0, new SelectItem("", ""));
+	}
+
+	public List<SelectItem> getNotEmptyCategories(DestinationModel destination) {
+		return this.categories.stream().filter(c -> c.getValue() != null
+				&& destination.getItemModelsByCategory().getOrDefault(c.getValue(), null) != null)
+				.collect(Collectors.toList());
+	}
+
+	public List<ItemModel> getItemsForCategory(DestinationModel destination, SelectItem category) {
+		return destination.getItemModelsByCategory().getOrDefault(category.getValue(), Collections.emptyList()).stream()
+				.sorted(Comparator.comparingLong(ItemModel::getQuantity).reversed()).toList();
 	}
 
 	public List<SelectItem> getCategories() {
@@ -136,7 +176,7 @@ public class Overview implements Serializable {
 	}
 
 	public boolean isShowDestinationModal() {
-		return showDestinationModal;
+		return this.showDestinationModal;
 	}
 
 	public void setShowDestinationModal(boolean showDestinationModal) {
@@ -167,11 +207,11 @@ public class Overview implements Serializable {
 		this.category = category;
 	}
 
-	public Boolean getShowErrorMessage() {
-		return showErrorMessage;
+	public Boolean getShowMessage() {
+		return showMessage;
 	}
 
-	public void setShowErrorMessage(Boolean showErrorMessage) {
-		this.showErrorMessage = showErrorMessage;
+	public void setShowMessage(Boolean showErrorMessage) {
+		this.showMessage = showErrorMessage;
 	}
 }
